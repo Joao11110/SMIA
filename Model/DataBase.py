@@ -1,44 +1,31 @@
-from peewee import (
-    BooleanField,
-    CharField,
-    DateField,
-    DateTimeField,
-    FloatField,
-    ForeignKeyField,
-    IntegerField,
-)
+from Model.Especialista import Especialista
+from Model.Lembrete import Lembrete
+from Model.Medicamento import Medicamento
+from Model.Paciente import Paciente
+from Model.BaseModel import db
+import sqlite3
 
-from Model.BaseModel import BaseModel
+class ConnectDataBase:
+    def __init__(self):
+        self.connectDB()
 
-class Especialista(BaseModel):
-    nome = CharField(null=False)
-    crm = IntegerField(null=False)
-    email = CharField(null=False)
-    senha = CharField(null=False)
+    def connectDB(self):
+        try:
+            db.connect()
+            db.create_tables([Especialista, Paciente, Medicamento, Lembrete])
+        except Exception as e:
+            return e
 
-class Paciente(BaseModel):
-    nome = CharField(null=False)
-    cpf = IntegerField(null=False)
-    email = CharField(null=False)
-    data_nascimento = DateField(null=False)
-    peso = FloatField(null=False)
-    altura = FloatField(null=False)
-    especialista = ForeignKeyField(Especialista, backref='pacientes', null=False)
+    def selectById(self, comando, idEspecifico):
+        con = sqlite3.connect("Model/DB/database.db")
+        cursor = con.cursor()
+        cursor.execute(comando, (idEspecifico,))
+        line = cursor.fetchone()
+        return line
 
-class Medicamento(BaseModel):
-    nome = CharField()
-    intervalo = CharField() # Formato 'HH:MM'
-    quantidade = FloatField(default=0)
-    data_inicio = DateTimeField(null=True) # Formato 'YYYY-MM-DD HH:MM:SS'
-    data_fim = DateTimeField(null=True)
-    paciente = ForeignKeyField(Paciente, backref='medicamentos')
-    especialista = ForeignKeyField(Especialista, backref='medicamentos')
-
-class Lembrete(BaseModel):
-    data_hora = DateTimeField() # Formato 'YYYY-MM-DD HH:MM:SS'
-    status = BooleanField(default=False)
-    medicamento = ForeignKeyField(Medicamento, backref='lembretes')
-    paciente = ForeignKeyField(Paciente, backref='lembretes')
-
-db.connect()
-db.create_tables([Especialista, Paciente, Medicamento, Lembrete])
+    def selectAll(self, comando):
+        con = sqlite3.connect("Model/DB/database.db")
+        cursor = con.cursor()
+        cursor.execute(comando)
+        lines = cursor.fetchall()
+        return lines
