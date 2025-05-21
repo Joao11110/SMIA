@@ -9,7 +9,7 @@ especialista_controller = EspecialistaController()
 @app.route('/api/especialistas', methods=['GET'])
 def get_especialistas():
     try:
-        especialistas = especialista_controller.listEspecialista()
+        especialistas = EspecialistaController().listEspecialista()
         especialistas_dict = [{
             'id': esp.id,
             'nome': esp.nome,
@@ -25,7 +25,7 @@ from playhouse.shortcuts import model_to_dict
 @app.route('/api/especialistas/<int:id>', methods=['GET'])
 def get_especialista(id):
     try:
-        especialista = especialista_controller.readEspecialista(id)
+        especialista = EspecialistaController().readEspecialista(id)
         if especialista:
             return jsonify({
                 'id': especialista.id,
@@ -45,7 +45,7 @@ def create_especialista():
         if not all(key in dados for key in ['nome', 'crm', 'email', 'senha']):
             return jsonify({'error': 'Dados incompletos'}), 400
             
-        novo_especialista = especialista_controller.createEspecialista(
+        novo_especialista = EspecialistaController().createEspecialista(
             nome=dados['nome'],
             crm=dados['crm'],
             email=dados['email'],
@@ -70,7 +70,7 @@ def delete_especialista(id):
         if not id:
             return jsonify({'error': 'ID não fornecido'}), 400
             
-        deletado = especialista_controller.deleteEspecialista(id)
+        deletado = EspecialistaController().deleteEspecialista(id)
         
         if deletado:
             return jsonify({'message': 'Especialista deletado com sucesso'}), 200
@@ -88,7 +88,7 @@ def update_especialista(id):
         if not dados:
             return jsonify({'error': 'Nenhum dado fornecido para atualização'}), 400
 
-        especialista_atualizado = especialista_controller.updateEspecialista(
+        especialista_atualizado = EspecialistaController().updateEspecialista(
             idEspecialista=id,
             novoNome=dados.get('nome'),
             novoCrm=dados.get('crm'),
