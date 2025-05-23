@@ -1,8 +1,10 @@
+from flask_cors import CORS
 from flask import Flask, jsonify, request, send_from_directory
 from Controller.EspecialistaCtrl import EspecialistaController
 import os
 
 app = Flask(__name__, static_folder='View')
+CORS(app, origins=["http://localhost:3000"])
 
 especialista_controller = EspecialistaController()
 
@@ -130,4 +132,4 @@ if __name__ == '__main__':
     if not os.path.exists('View'):
         os.makedirs('View')
 
-    app.run(debug=True, port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5000)
