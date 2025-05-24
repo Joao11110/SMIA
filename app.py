@@ -6,6 +6,14 @@ import os
 app = Flask(__name__, static_folder='View')
 CORS(app, origins=["http://localhost:5000"])
 
+CORS(app, resources={
+    r"/api/*": {
+        "origins": ["http://localhost:3000"],
+        "methods": ["GET", "POST", "PUT", "DELETE"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }
+})
+
 especialista_controller = EspecialistaController()
 
 @app.route('/api/especialistas', methods=['GET'])
