@@ -4,7 +4,7 @@ from Controller.EspecialistaCtrl import EspecialistaController
 import os
 
 app = Flask(__name__, static_folder='View')
-CORS(app, origins=["http://localhost:3000"])
+CORS(app, origins=["http://localhost:5000"])
 
 especialista_controller = EspecialistaController()
 
