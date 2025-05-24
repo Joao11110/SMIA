@@ -41,7 +41,8 @@ def get_especialista(id):
                 'id': especialista.id,
                 'nome': especialista.nome,
                 'crm': especialista.crm,
-                'email': especialista.email
+                'email': especialista.email,
+                'senha': especialista.senha
             })
         return jsonify({'error': 'Especialista não encontrado'}), 404
     except Exception as e:
