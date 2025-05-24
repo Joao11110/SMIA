@@ -1,4 +1,4 @@
-#!C:\Users\ruanp\Documents\SMIA\venv\Scripts\python.exe
+#!C:\Users\ruanp\Documents\smia-back-end\venv\Scripts\python.exe
 
 import datetime
 import os
