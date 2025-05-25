@@ -10,49 +10,59 @@ class LembreteController(ConnectDataBase):
         self, data_hora: str, status: int, medicamento: int, paciente: int
     ):
         try:
-            Lembrete.create(
+            lembrete = Lembrete.create(
                 data_hora=data_hora,
                 status=status,
                 medicamento=medicamento,
                 paciente=paciente,
             )
+            return lembrete
         except Exception as e:
-            return e
+            raise e
 
     def readLembrete(self, idLembrete: int):
         try:
-            comando = "select * from lembrete where id == ?"
-            return self.selectById(comando, idLembrete)
+            return Lembrete.get(Lembrete.id == idLembrete)
+        except Lembrete.DoesNotExist:
+            return None
         except Exception as e:
-            return e
+            raise e
 
     def listLembrete(self):
         try:
-            comando = "select * from lembrete"
-            return self.selectAll(comando)
+            return list(Lembrete.select())
         except Exception as e:
-            return e
+            raise e
 
     def updateLembrete(
         self,
         idLembrete: int,
-        novaData_hora: str,
-        NovoStatus: int,
-        NovoMedicamento: int,
-        NovoPaciente: int,
+        novaData_hora: str = None,
+        NovoStatus: bool = None,  # Alterado de int para bool
+        NovoMedicamento: int = None,
+        NovoPaciente: int = None,
     ):
         try:
-            l = Lembrete.get(Lembrete.id == idLembrete)
-            l.data_hora = novaData_hora
-            l.status = NovoStatus
-            l.medicamento = NovoMedicamento
-            l.paciente = NovoPaciente
-            l.save()
+            lembrete = Lembrete.get(Lembrete.id == idLembrete)
+            
+            if novaData_hora:
+                lembrete.data_hora = novaData_hora
+            if NovoStatus is not None:
+                lembrete.status = NovoStatus
+            if NovoMedicamento:
+                lembrete.medicamento = NovoMedicamento
+            if NovoPaciente:
+                lembrete.paciente = NovoPaciente
+                
+            lembrete.save()
+            return lembrete
+        except Lembrete.DoesNotExist:
+            return None
         except Exception as e:
-            return e
+            raise e
 
     def deleteLembrete(self, idLembrete: int):
         try:
-            Lembrete.delete_by_id(Lembrete.id == idLembrete)
+            return Lembrete.delete_by_id(idLembrete) > 0
         except Exception as e:
-            return e
+            raise e
