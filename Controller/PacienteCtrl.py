@@ -33,10 +33,13 @@ class PacienteController(ConnectDataBase):
 
     def readPaciente(self, idPaciente: int):
         try:
-            comando = "select * from paciente where id == ?"
-            return self.selectById(comando, idPaciente)
+            paciente = Paciente.get_by_id(idPaciente)
+            return paciente
+        except Paciente.DoesNotExist:
+            return None
         except Exception as e:
-            return e
+            print(f"Erro ao buscar paciente: {str(e)}")
+        raise
 
     def listPaciente(self):
         try:
