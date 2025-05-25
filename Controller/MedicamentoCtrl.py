@@ -87,9 +87,14 @@ class MedicamentoController(ConnectDataBase):
             m.save()
         except Exception as e:
             return e
-
-    def deleteMedicamento(self, idMedicamento: int):
+        
+    def deleteMedicamento(self, idPaciente: int):
         try:
-            Medicamento.delete_by_id(Medicamento.id == idMedicamento)
+            medicamento = Medicamento.get_by_id(idPaciente)
+            medicamento.delete_instance()
+            return True
+        except Medicamento.DoesNotExist:
+            return False
         except Exception as e:
-            return e
+            print(f"Erro ao deletar medicamento: {str(e)}")
+            return False
