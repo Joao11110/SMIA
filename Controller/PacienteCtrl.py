@@ -48,31 +48,32 @@ class PacienteController(ConnectDataBase):
             print(f"Erro ao listar pacientes: {str(e)}")
         raise e
 
-    def updatePaciente(
-        self,
-        idPaciente: int,
-        novoNome: str,
-        novoCpf: int,
-        novoEmail: str,
-        novaData_nascimento: str,
-        novoPeso: float,
-        novaAltura: float,
-        novoEspecialista: int,
-    ):
+    def updatePaciente(self, idPaciente: int, novoNome: str, novoCpf: int, novoEmail: str,
+                  novaData_nascimento: str, novoPeso: float, novaAltura: float, novoEspecialista: int):
         try:
-            p = Paciente.get(Paciente.id == idPaciente)
-            p.nome = novoNome
-            p.cpf = novoCpf
-            p.email = novoEmail
-            p.data_nascimento = novaData_nascimento
-            p.peso = novoPeso
-            p.altura = novaAltura
-            p.especialista = novoEspecialista
+            paciente = Paciente.get_by_id(idPaciente)
+            paciente.nome = novoNome or paciente.nome
+            paciente.cpf = novoCpf or paciente.cpf
+            paciente.email = novoEmail or paciente.email
+            paciente.data_nascimento = novaData_nascimento or paciente.data_nascimento
+            paciente.peso = novoPeso or paciente.peso
+            paciente.altura = novaAltura or paciente.altura
+            paciente.especialista = novoEspecialista or paciente.especialista
+            paciente.save()
+            return paciente
+        except Paciente.DoesNotExist:
+            return None
         except Exception as e:
-            return e
+            print(f"Erro ao atualizar paciente: {str(e)}")
+            return None
 
     def deletePaciente(self, idPaciente: int):
         try:
-            Paciente.delete_by_id(Paciente.id == idPaciente)
+            paciente = Paciente.get_by_id(idPaciente)
+            paciente.delete_instance()
+            return True
+        except Paciente.DoesNotExist:
+            return False
         except Exception as e:
-            return e
+            print(f"Erro ao deletar paciente: {str(e)}")
+            return False
