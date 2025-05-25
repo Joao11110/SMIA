@@ -2,6 +2,7 @@ from flask_cors import CORS
 from flask import Flask, jsonify, request, send_from_directory
 from Controller.EspecialistaCtrl import EspecialistaController
 from Controller.PacienteCtrl import PacienteController
+from Controller.MedicamentoCtrl import MedicamentoController
 import os
 
 app = Flask(__name__, static_folder='View')
@@ -17,6 +18,7 @@ CORS(app, resources={
 
 especialista_controller = EspecialistaController()
 paciente_controller = PacienteController()
+medicamento_ctrl = MedicamentoController()
 
 @app.route('/api/especialistas', methods=['GET'])
 def get_especialistas():
@@ -245,6 +247,70 @@ def update_paciente(id):
         return jsonify({'error': str(e)}), 409
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    
+@app.route('/api/medicamentos', methods=['POST'])
+def criar_medicamento():
+    data = request.get_json()
+    try:
+        medicamento = medicamento_ctrl.createMedicamento(
+            nome=data['nome'],
+            intervalo=data['intervalo'],
+            quantidade=data['quantidade'],
+            data_inicio=data['data_inicio'],
+            data_fim=data['data_fim'],
+            paciente=data['paciente'],
+            especialista=data['especialista']
+        )
+        return jsonify({"message": "Medicamento criado com sucesso!", "id": medicamento.id}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+@app.route('/api/medicamentos/por-paciente/<int:paciente_id>', methods=['GET'])
+def listar_medicamentos_por_paciente(paciente_id):
+    try:
+        medicamentos = medicamento_ctrl.listMedicamentoPorPaciente(paciente_id)
+        return jsonify(medicamentos), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/medicamentos/<int:id>', methods=['GET'])
+def obter_medicamento(id):
+    try:
+        medicamento = medicamento_ctrl.readMedicamento(id)
+        if medicamento:
+            return jsonify(medicamento), 200
+        return jsonify({"message": "Medicamento não encontrado"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/medicamentos/<int:id>', methods=['PUT'])
+def atualizar_medicamento(id):
+    data = request.get_json()
+    try:
+        medicamento_ctrl.updateMedicamento(
+            idMedicamento=id,
+            novoNome=data.get('nome'),
+            novoIntervalo=data.get('intervalo'),
+            novaQuantidade=data.get('quantidade'),
+            novaData_inicio=data.get('data_inicio'),
+            novaData_fim=data.get('data_fim'),
+            novoPaciente=data.get('paciente'),
+            novoEspecialista=data.get('especialista')
+        )
+        return jsonify({"message": "Medicamento atualizado com sucesso!"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+@app.route('/api/medicamentos/<int:id>', methods=['DELETE'])
+def deletar_medicamento(id):
+    try:
+        medicamento_ctrl.deleteMedicamento(id)
+        return jsonify({"message": "Medicamento deletado com sucesso!"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+if __name__ == '__main__':
+    app.run(debug=True)
 
 @app.route('/')
 def serve_index():
