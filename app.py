@@ -1,3 +1,4 @@
+from Controller.LembreteCtrl import LembreteController
 from flask_cors import CORS
 from flask import Flask, jsonify, request, send_from_directory
 from Controller.EspecialistaCtrl import EspecialistaController
@@ -19,6 +20,7 @@ CORS(app, resources={
 especialista_controller = EspecialistaController()
 paciente_controller = PacienteController()
 medicamento_ctrl = MedicamentoController()
+lembrete_ctrl = LembreteController()
 
 @app.route('/api/especialistas', methods=['GET'])
 def get_especialistas():
@@ -308,6 +310,155 @@ def deletar_medicamento(id):
         return jsonify({"message": "Medicamento deletado com sucesso!"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route('/api/lembretes', methods=['GET'])
+def get_lembretes():
+    try:
+        lembretes = lembrete_ctrl.listLembrete()
+        lembretes_dict = [{
+            'id': lem.id,
+            'data_hora': str(lem.data_hora),
+            'status': lem.status,
+            'medicamento': lem.medicamento.id,
+            'paciente': lem.paciente.id,
+            'medicamento_nome': lem.medicamento.nome,
+            'paciente_nome': lem.paciente.nome
+        } for lem in lembretes]
+        return jsonify(lembretes_dict), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/lembretes/por-paciente/<int:paciente_id>', methods=['GET'])
+def get_lembretes_por_paciente(paciente_id):
+    try:
+        lembretes = lembrete_ctrl.listLembrete()
+        lembretes_paciente = [{
+            'id': lem.id,
+            'data_hora': str(lem.data_hora),
+            'status': lem.status,
+            'medicamento': lem.medicamento.id,
+            'paciente': lem.paciente.id,
+            'medicamento_nome': lem.medicamento.nome,
+            'paciente_nome': lem.paciente.nome
+        } for lem in lembretes if lem.paciente.id == paciente_id]
+        return jsonify(lembretes_paciente), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/lembretes/<int:id>', methods=['GET'])
+def get_lembrete(id):
+    try:
+        lembrete = lembrete_ctrl.readLembrete(id)
+        if lembrete:
+            return jsonify({
+                'id': lembrete.id,
+                'data_hora': str(lembrete.data_hora),
+                'status': lembrete.status,
+                'medicamento': {
+                    'id': lembrete.medicamento.id,
+                    'nome': lembrete.medicamento.nome
+                },
+                'paciente': {
+                    'id': lembrete.paciente.id,
+                    'nome': lembrete.paciente.nome
+                },
+                'message': 'Lembrete encontrado'
+            }), 200
+        return jsonify({'error': 'Lembrete não encontrado'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/lembretes', methods=['POST'])
+def create_lembrete():
+    try:
+        dados = request.get_json()
+        print("Dados recebidos:", dados)
+        
+        if not all(key in dados for key in ['data_hora', 'medicamento', 'paciente']):
+            return jsonify({'error': 'Dados incompletos'}), 400
+            
+        novo_lembrete = lembrete_ctrl.createLembrete(
+            data_hora=dados['data_hora'],
+            status=dados.get('status', False),
+            medicamento=dados['medicamento'],
+            paciente=dados['paciente']
+        )
+        
+        return jsonify({
+            'id': novo_lembrete.id,
+            'message': 'Lembrete criado com sucesso'
+        }), 201
+        
+    except Exception as e:
+        print("Erro na criação:", str(e))
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/lembretes/<int:id>', methods=['PUT'])
+def update_lembrete(id):
+    try:
+        dados = request.get_json()
+
+        if not dados:
+            return jsonify({'error': 'Nenhum dado fornecido para atualização'}), 400
+
+        lembrete_atualizado = lembrete_ctrl.updateLembrete(
+            idLembrete=id,
+            novaData_hora=dados.get('data_hora'),
+            NovoStatus=dados.get('status'),
+            NovoMedicamento=dados.get('medicamento'),
+            NovoPaciente=dados.get('paciente')
+        )
+        
+        if not lembrete_atualizado:
+            return jsonify({'error': 'Lembrete não encontrado'}), 404
+            
+        return jsonify({
+            'id': lembrete_atualizado.id,
+            'data_hora': str(lembrete_atualizado.data_hora),
+            'status': lembrete_atualizado.status,
+            'medicamento': lembrete_atualizado.medicamento.id,
+            'paciente': lembrete_atualizado.paciente.id,
+            'message': 'Lembrete atualizado com sucesso'
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/lembretes/<int:id>', methods=['DELETE'])
+def delete_lembrete(id):
+    try:
+        deletado = lembrete_ctrl.deleteLembrete(id)
+        
+        if deletado:
+            return jsonify({'message': 'Lembrete deletado com sucesso'}), 200
+        else:
+            return jsonify({'error': 'Lembrete não encontrado'}), 404
+            
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/lembretes/<int:id>/realizado', methods=['PATCH'])
+def marcar_lembrete_realizado(id):
+    try:
+        lembrete = lembrete_ctrl.readLembrete(id)
+        if not lembrete:
+            return jsonify({'error': 'Lembrete não encontrado'}), 404
+            
+        lembrete_atualizado = lembrete_ctrl.updateLembrete(
+            idLembrete=id,
+            novaData_hora=lembrete.data_hora,
+            NovoStatus=True,
+            NovoMedicamento=lembrete.medicamento.id,
+            NovoPaciente=lembrete.paciente.id
+        )
+        
+        return jsonify({
+            'id': lembrete_atualizado.id,
+            'message': 'Lembrete marcado como realizado'
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
