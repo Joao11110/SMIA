@@ -9,9 +9,10 @@ from peewee import (
     PrimaryKeyField,
 )
 
+
 class Lembrete(BaseModel):
     id = PrimaryKeyField(null=False)
-    data_hora = DateTimeField() # Formato 'YYYY-MM-DD HH:MM:SS'
+    data_hora = DateTimeField()  # Formato 'YYYY-MM-DD HH:MM:SS'
     status = BooleanField(default=False)
-    medicamento = ForeignKeyField(Medicamento, backref='lembretes')
-    paciente = ForeignKeyField(Paciente, backref='lembretes')
+    medicamento = ForeignKeyField(Medicamento, backref="lembretes")
+    paciente = ForeignKeyField(Paciente, backref="lembretes")

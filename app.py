@@ -1,6 +1,7 @@
 from flask_cors import CORS
 from flask import Flask, jsonify, request, send_from_directory
 from Controller.EspecialistaCtrl import EspecialistaController
+from Controller.PacienteCtrl import PacienteController
 import os
 
 app = Flask(__name__, static_folder='View')
@@ -15,6 +16,7 @@ CORS(app, resources={
 })
 
 especialista_controller = EspecialistaController()
+paciente_controller = PacienteController()
 
 @app.route('/api/especialistas', methods=['GET'])
 def get_especialistas():
@@ -116,6 +118,127 @@ def update_especialista(id):
             'crm': especialista_atualizado.crm,
             'email': especialista_atualizado.email,
             'message': 'Especialista atualizado com sucesso'
+        }), 200
+        
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 409
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
+@app.route('/api/pacientes', methods=['GET'])
+def get_pacientes():
+    try:
+        pacientes = paciente_controller.listPaciente()
+        pacientes_dict = [{
+            'id': pac.id,
+            'nome': pac.nome,
+            'cpf': pac.cpf,
+            'email': pac.email,
+            'data_nascimento': str(pac.data_nascimento),
+            'peso': pac.peso,
+            'altura': pac.altura,
+            'especialista': pac.especialista.id
+        } for pac in pacientes]
+        return jsonify(pacientes_dict)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/pacientes/<int:id>', methods=['GET'])
+def get_paciente(id):
+    try:
+        paciente = paciente_controller.readPaciente(id)
+        if paciente:
+            return jsonify({
+                'id': paciente.id,
+                'nome': paciente.nome,
+                'cpf': paciente.cpf,
+                'email': paciente.email,
+                'data_nascimento': str(paciente.data_nascimento),
+                'peso': paciente.peso,
+                'altura': paciente.altura,
+                'especialista': paciente.especialista.id
+            })
+        return jsonify({'error': 'Paciente não encontrado'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/pacientes', methods=['POST'])
+def create_paciente():
+    try:
+        dados = request.get_json()
+
+        if not all(key in dados for key in ['nome', 'cpf', 'email', 'data_nascimento', 'peso', 'altura', 'especialista']):
+            return jsonify({'error': 'Dados incompletos'}), 400
+            
+        novo_paciente = paciente_controller.createPaciente(
+            nome=dados['nome'],
+            cpf=dados['cpf'],
+            email=dados['email'],
+            data_nascimento=dados['data_nascimento'],
+            peso=dados['peso'],
+            altura=dados['altura'],
+            especialista=dados['especialista']
+        )
+        
+        return jsonify({
+            'id': novo_paciente.id,
+            'nome': novo_paciente.nome,
+            'message': 'Paciente criado com sucesso'
+        }), 201
+        
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 409
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/pacientes/<int:id>', methods=['DELETE'])
+def delete_paciente(id):
+    try:
+        if not id:
+            return jsonify({'error': 'ID não fornecido'}), 400
+            
+        deletado = paciente_controller.deletePaciente(id)
+        
+        if deletado:
+            return jsonify({'message': 'Paciente deletado com sucesso'}), 200
+        else:
+            return jsonify({'error': 'Paciente não encontrado'}), 404
+            
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/pacientes/<int:id>', methods=['PUT'])
+def update_paciente(id):
+    try:
+        dados = request.get_json()
+
+        if not dados:
+            return jsonify({'error': 'Nenhum dado fornecido para atualização'}), 400
+
+        paciente_atualizado = paciente_controller.updatePaciente(
+            idPaciente=id,
+            novoNome=dados.get('nome'),
+            novoCpf=dados.get('cpf'),
+            novoEmail=dados.get('email'),
+            novaData_nascimento=dados.get('data_nascimento'),
+            novoPeso=dados.get('peso'),
+            novaAltura=dados.get('altura'),
+            novoEspecialista=dados.get('especialista')
+        )
+        
+        if not paciente_atualizado:
+            return jsonify({'error': 'Paciente não encontrado'}), 404
+            
+        return jsonify({
+            'id': paciente_atualizado.id,
+            'nome': paciente_atualizado.nome,
+            'cpf': paciente_atualizado.cpf,
+            'email': paciente_atualizado.email,
+            'data_nascimento': str(paciente_atualizado.data_nascimento),
+            'peso': paciente_atualizado.peso,
+            'altura': paciente_atualizado.altura,
+            'especialista': paciente_atualizado.especialista.id,
+            'message': 'Paciente atualizado com sucesso'
         }), 200
         
     except ValueError as e:

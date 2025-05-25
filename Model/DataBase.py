@@ -5,6 +5,7 @@ from Model.Paciente import Paciente
 from Model.BaseModel import db
 import sqlite3
 
+
 class ConnectDataBase:
     def __init__(self):
         self.connectDB()

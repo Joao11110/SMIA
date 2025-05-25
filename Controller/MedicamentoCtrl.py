@@ -1,13 +1,31 @@
 from Model.Medicamento import Medicamento
 from Model.DataBase import ConnectDataBase
 
+
 class MedicamentoController(ConnectDataBase):
     def __init__(self):
         super().__init__()
 
-    def createMedicamento(self, nome: str, intervalo: str, quantidade: float, data_inicio: str, data_fim: str, paciente: int, especialista: int):
+    def createMedicamento(
+        self,
+        nome: str,
+        intervalo: str,
+        quantidade: float,
+        data_inicio: str,
+        data_fim: str,
+        paciente: int,
+        especialista: int,
+    ):
         try:
-            Medicamento.create(nome=nome, intervalo=intervalo, quantidade=quantidade, data_inicio=data_inicio, data_fim=data_fim, paciente=paciente, especialista=especialista)
+            Medicamento.create(
+                nome=nome,
+                intervalo=intervalo,
+                quantidade=quantidade,
+                data_inicio=data_inicio,
+                data_fim=data_fim,
+                paciente=paciente,
+                especialista=especialista,
+            )
         except Exception as e:
             return e
 
@@ -25,7 +43,17 @@ class MedicamentoController(ConnectDataBase):
         except Exception as e:
             return e
 
-    def updateMedicamento(self, idMedicamento: int, novoNome: str, novoIntervalo: str, novaQuantidade: float, novaData_inicio: str, novaData_fim: str, novoPaciente: int, novoEspecialista: int):
+    def updateMedicamento(
+        self,
+        idMedicamento: int,
+        novoNome: str,
+        novoIntervalo: str,
+        novaQuantidade: float,
+        novaData_inicio: str,
+        novaData_fim: str,
+        novoPaciente: int,
+        novoEspecialista: int,
+    ):
         try:
             m = Medicamento.get(Medicamento.id == idMedicamento)
             m.nome = novoNome
@@ -41,6 +69,6 @@ class MedicamentoController(ConnectDataBase):
 
     def deleteMedicamento(self, idMedicamento: int):
         try:
-            Medicamento.delete_by_id(Medicamento.id==idMedicamento)
+            Medicamento.delete_by_id(Medicamento.id == idMedicamento)
         except Exception as e:
             return e

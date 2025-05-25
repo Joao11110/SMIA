@@ -1,13 +1,21 @@
 from Model.Lembrete import Lembrete
 from Model.DataBase import ConnectDataBase
 
+
 class LembreteController(ConnectDataBase):
     def __init__(self):
         super().__init__()
 
-    def createLembrete(self, data_hora: str, status: int, medicamento: int, paciente: int):
+    def createLembrete(
+        self, data_hora: str, status: int, medicamento: int, paciente: int
+    ):
         try:
-            Lembrete.create(data_hora=data_hora, status=status, medicamento=medicamento, paciente=paciente)
+            Lembrete.create(
+                data_hora=data_hora,
+                status=status,
+                medicamento=medicamento,
+                paciente=paciente,
+            )
         except Exception as e:
             return e
 
@@ -25,7 +33,14 @@ class LembreteController(ConnectDataBase):
         except Exception as e:
             return e
 
-    def updateLembrete(self, idLembrete: int, novaData_hora: str, NovoStatus: int, NovoMedicamento: int, NovoPaciente: int):
+    def updateLembrete(
+        self,
+        idLembrete: int,
+        novaData_hora: str,
+        NovoStatus: int,
+        NovoMedicamento: int,
+        NovoPaciente: int,
+    ):
         try:
             l = Lembrete.get(Lembrete.id == idLembrete)
             l.data_hora = novaData_hora
@@ -38,6 +53,6 @@ class LembreteController(ConnectDataBase):
 
     def deleteLembrete(self, idLembrete: int):
         try:
-            Lembrete.delete_by_id(Lembrete.id==idLembrete)
+            Lembrete.delete_by_id(Lembrete.id == idLembrete)
         except Exception as e:
             return e
