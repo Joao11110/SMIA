@@ -10,6 +10,7 @@ from peewee import (
     PrimaryKeyField,
 )
 
+
 class Paciente(BaseModel):
     id = PrimaryKeyField(null=False)
     nome = CharField(null=False)
@@ -18,4 +19,4 @@ class Paciente(BaseModel):
     data_nascimento = DateField(null=False)
     peso = FloatField(null=False)
     altura = FloatField(null=False)
-    especialista = ForeignKeyField(Especialista, backref='pacientes', null=False)
+    especialista = ForeignKeyField(Especialista, backref="pacientes", null=False)

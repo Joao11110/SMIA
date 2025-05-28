@@ -6,6 +6,7 @@ from peewee import (
     PrimaryKeyField,
 )
 
+
 class Especialista(BaseModel):
     id = PrimaryKeyField(null=False)
     nome = CharField(null=False)

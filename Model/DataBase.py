@@ -5,6 +5,7 @@ from Model.Paciente import Paciente
 from Model.BaseModel import db
 import sqlite3
 
+
 class ConnectDataBase:
     def __init__(self):
         self.connectDB()
@@ -14,4 +15,22 @@ class ConnectDataBase:
             db.connect()
             db.create_tables([Especialista, Paciente, Medicamento, Lembrete])
         except Exception as e:
+<<<<<<< HEAD
             return e
+=======
+            return e
+
+    def selectById(self, comando, idEspecifico):
+        con = sqlite3.connect("Model/DB/database.db")
+        cursor = con.cursor()
+        cursor.execute(comando, (idEspecifico,))
+        line = cursor.fetchone()
+        return line
+
+    def selectAll(self, comando):
+        con = sqlite3.connect("Model/DB/database.db")
+        cursor = con.cursor()
+        cursor.execute(comando)
+        lines = cursor.fetchall()
+        return lines
+>>>>>>> develop
