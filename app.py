@@ -82,6 +82,30 @@ def list_especialistas():
         return jsonify({'error': str(e)}), 500
 
 
+@app.route('/api/especialista/email', methods=['GET'])
+def get_especialista_by_email():
+    try:
+        email = request.args.get('email')
+        
+        if not email:
+            return jsonify({'error': 'O parâmetro email é obrigatório'}), 400
+
+        especialista = EspecialistaController().getEspecialistaByEmail(email)
+
+        if not especialista:
+            return jsonify({'error': 'Especialista não encontrado'}), 404
+
+        return jsonify({
+            'id': especialista.id,
+            'nome': especialista.nome,
+            'crm': especialista.crm,
+            'email': especialista.email
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': f'Erro ao buscar especialista: {str(e)}'}), 500
+
+
 @app.route('/api/especialistas/<int:id>', methods=['GET'])
 def get_especialista(id):
     try:
