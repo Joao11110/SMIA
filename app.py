@@ -3,11 +3,12 @@ from Controller.EspecialistaController import EspecialistaController
 from Controller.LembreteController import LembreteController
 from Controller.MedicamentoController import MedicamentoController
 from Controller.PacienteController import PacienteController
+from flask_cors import CORS
 import os
 
 
 app = Flask(__name__, static_folder='View')
-
+CORS(app, origins="http://localhost:3000")
 
 @app.route('/api/especialistas', methods=['POST'])
 def create_especialista():
@@ -313,4 +314,4 @@ def page_not_found(e):
 if __name__ == '__main__':
     if not os.path.exists('View'):
         os.makedirs('View')
-    app.run(debug=True, port=3000)
+    app.run(debug=True, port=5000)
