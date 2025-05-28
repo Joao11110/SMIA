@@ -1,59 +1,13 @@
-from Controller.LembreteCtrl import LembreteController
-from flask_cors import CORS
 from flask import Flask, jsonify, request, send_from_directory
-from Controller.EspecialistaCtrl import EspecialistaController
-from Controller.PacienteCtrl import PacienteController
-from Controller.MedicamentoCtrl import MedicamentoController
+from Controller.EspecialistaController import EspecialistaController
+from Controller.LembreteController import LembreteController
+from Controller.MedicamentoController import MedicamentoController
+from Controller.PacienteController import PacienteController
 import os
 
 
 app = Flask(__name__, static_folder='View')
-CORS(app, origins=["http://localhost:5000"])
 
-CORS(app, resources={
-    r"/api/*": {
-        "origins": ["http://localhost:3000"],
-        "methods": ["GET", "POST", "PUT", "DELETE"],
-        "allow_headers": ["Content-Type", "Authorization"]
-    }
-})
-
-especialista_controller = EspecialistaController()
-paciente_controller = PacienteController()
-medicamento_ctrl = MedicamentoController()
-lembrete_ctrl = LembreteController()
-
-@app.route('/api/especialistas', methods=['GET'])
-def get_especialistas():
-    try:
-        especialistas = EspecialistaController().listEspecialista()
-        especialistas_dict = [{
-            'id': esp.id,
-            'nome': esp.nome,
-            'crm': esp.crm,
-            'email': esp.email
-        } for esp in especialistas]
-        return jsonify(especialistas_dict)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-from playhouse.shortcuts import model_to_dict
-
-@app.route('/api/especialistas/<int:id>', methods=['GET'])
-def get_especialista(id):
-    try:
-        especialista = EspecialistaController().readEspecialista(id)
-        if especialista:
-            return jsonify({
-                'id': especialista.id,
-                'nome': especialista.nome,
-                'crm': especialista.crm,
-                'email': especialista.email,
-                'senha': especialista.senha
-            })
-        return jsonify({'error': 'Especialista não encontrado'}), 404
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/especialistas', methods=['POST'])
 def create_especialista():
@@ -146,371 +100,147 @@ def delete_especialista(id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/especialistas/<int:id>', methods=['PUT'])
-def update_especialista(id):
-    try:
-        dados = request.get_json()
 
-        if not dados:
-            return jsonify({'error': 'Nenhum dado fornecido para atualização'}), 400
+@app.route('/api/pacientes', methods=['POST'])
+def create_paciente():
+    data = request.get_json()
+    return PacienteController().createPaciente(
+        data['nome'],
+        data['cpf'],
+        data['email'],
+        data['data_nascimento'],
+        data['peso'],
+        data['altura'],
+        data['especialista']
+    )
 
-        especialista_atualizado = EspecialistaController().updateEspecialista(
-            idEspecialista=id,
-            novoNome=dados.get('nome'),
-            novoCrm=dados.get('crm'),
-            novoEmail=dados.get('email'),
-            novaSenha=dados.get('senha')
-        )
-        
-        if not especialista_atualizado:
-            return jsonify({'error': 'Especialista não encontrado'}), 404
-            
-        return jsonify({
-            'id': especialista_atualizado.id,
-            'nome': especialista_atualizado.nome,
-            'crm': especialista_atualizado.crm,
-            'email': especialista_atualizado.email,
-            'message': 'Especialista atualizado com sucesso'
-        }), 200
-        
-    except ValueError as e:
-        return jsonify({'error': str(e)}), 409
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-    
+
+@app.route('/api/pacientes/<int:idPaciente>', methods=['GET'])
+def get_paciente(idPaciente):
+    return PacienteController().getPaciente(idPaciente)
+
+
 @app.route('/api/pacientes', methods=['GET'])
-def get_pacientes():
+def list_pacientes():
     try:
-        pacientes = paciente_controller.listPaciente()
+        pacientes = PacienteController().listPacientes()
         pacientes_dict = [{
-            'id': pac.id,
-            'nome': pac.nome,
-            'cpf': pac.cpf,
-            'email': pac.email,
-            'data_nascimento': str(pac.data_nascimento),
-            'peso': pac.peso,
-            'altura': pac.altura,
-            'especialista': pac.especialista.id
-        } for pac in pacientes]
+            'id': paciente.id,
+            'nome': paciente.nome,
+            'cpf': paciente.cpf,
+            'email': paciente.email,
+            'data_nascimento': paciente.data_nascimento.strftime('%Y-%m-%d'),
+            'peso': paciente.peso,
+            'altura': paciente.altura,
+            'especialista': paciente.especialista.id
+        } for paciente in pacientes]
         return jsonify(pacientes_dict)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/pacientes/<int:id>', methods=['GET'])
-def get_paciente(id):
-    try:
-        paciente = paciente_controller.readPaciente(id)
-        if paciente:
-            return jsonify({
-                'id': paciente.id,
-                'nome': paciente.nome,
-                'cpf': paciente.cpf,
-                'email': paciente.email,
-                'data_nascimento': str(paciente.data_nascimento),
-                'peso': paciente.peso,
-                'altura': paciente.altura,
-                'especialista': paciente.especialista.id
-            })
-        return jsonify({'error': 'Paciente não encontrado'}), 404
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
 
-@app.route('/api/pacientes', methods=['POST'])
-def create_paciente():
-    try:
-        dados = request.get_json()
-
-        if not all(key in dados for key in ['nome', 'cpf', 'email', 'data_nascimento', 'peso', 'altura', 'especialista']):
-            return jsonify({'error': 'Dados incompletos'}), 400
-            
-        novo_paciente = paciente_controller.createPaciente(
-            nome=dados['nome'],
-            cpf=dados['cpf'],
-            email=dados['email'],
-            data_nascimento=dados['data_nascimento'],
-            peso=dados['peso'],
-            altura=dados['altura'],
-            especialista=dados['especialista']
-        )
-        
-        return jsonify({
-            'id': novo_paciente.id,
-            'nome': novo_paciente.nome,
-            'message': 'Paciente criado com sucesso'
-        }), 201
-        
-    except ValueError as e:
-        return jsonify({'error': str(e)}), 409
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/pacientes/<int:id>', methods=['DELETE'])
-def delete_paciente(id):
-    try:
-        if not id:
-            return jsonify({'error': 'ID não fornecido'}), 400
-            
-        deletado = paciente_controller.deletePaciente(id)
-        
-        if deletado:
-            return jsonify({'message': 'Paciente deletado com sucesso'}), 200
-        else:
-            return jsonify({'error': 'Paciente não encontrado'}), 404
-            
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/pacientes/<int:id>', methods=['PUT'])
-def update_paciente(id):
-    try:
-        dados = request.get_json()
-
-        if not dados:
-            return jsonify({'error': 'Nenhum dado fornecido para atualização'}), 400
-
-        paciente_atualizado = paciente_controller.updatePaciente(
-            idPaciente=id,
-            novoNome=dados.get('nome'),
-            novoCpf=dados.get('cpf'),
-            novoEmail=dados.get('email'),
-            novaData_nascimento=dados.get('data_nascimento'),
-            novoPeso=dados.get('peso'),
-            novaAltura=dados.get('altura'),
-            novoEspecialista=dados.get('especialista')
-        )
-        
-        if not paciente_atualizado:
-            return jsonify({'error': 'Paciente não encontrado'}), 404
-            
-        return jsonify({
-            'id': paciente_atualizado.id,
-            'nome': paciente_atualizado.nome,
-            'cpf': paciente_atualizado.cpf,
-            'email': paciente_atualizado.email,
-            'data_nascimento': str(paciente_atualizado.data_nascimento),
-            'peso': paciente_atualizado.peso,
-            'altura': paciente_atualizado.altura,
-            'especialista': paciente_atualizado.especialista.id,
-            'message': 'Paciente atualizado com sucesso'
-        }), 200
-        
-    except ValueError as e:
-        return jsonify({'error': str(e)}), 409
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-    
-@app.route('/api/medicamentos', methods=['POST'])
-def criar_medicamento():
+@app.route('/api/pacientes/<int:idPaciente>', methods=['PUT'])
+def update_paciente(idPaciente):
     data = request.get_json()
-    try:
-        medicamento = medicamento_ctrl.createMedicamento(
-            nome=data['nome'],
-            intervalo=data['intervalo'],
-            quantidade=data['quantidade'],
-            data_inicio=data['data_inicio'],
-            data_fim=data['data_fim'],
-            paciente=data['paciente'],
-            especialista=data['especialista']
-        )
-        return jsonify({"message": "Medicamento criado com sucesso!", "id": medicamento.id}), 201
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
+    return PacienteController().updatePaciente(
+        idPaciente,
+        data['nome'],
+        data['cpf'],
+        data['email'],
+        data['data_nascimento'],
+        data['peso'],
+        data['altura'],
+        data['especialista']
+    )
 
-@app.route('/api/medicamentos/por-paciente/<int:paciente_id>', methods=['GET'])
-def listar_medicamentos_por_paciente(paciente_id):
-    try:
-        medicamentos = medicamento_ctrl.listMedicamentoPorPaciente(paciente_id)
-        return jsonify(medicamentos), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/pacientes/<int:idPaciente>', methods=['DELETE'])
+def delete_paciente(idPaciente):
+    return PacienteController().deletePaciente(idPaciente)
+
+
+@app.route('/api/medicamentos', methods=['POST'])
+def create_medicamento():
+    data = request.get_json()
+    return MedicamentoController().createMedicamento(
+        nome=data.get('nome'),
+        intervalo=data.get('intervalo'),
+        quantidade=data.get('quantidade'),
+        data_inicio=data.get('data_inicio'),
+        data_fim=data.get('data_fim'),
+        paciente=data.get('paciente'),
+        especialista=data.get('especialista')
+    )
+
 
 @app.route('/api/medicamentos/<int:id>', methods=['GET'])
-def obter_medicamento(id):
-    try:
-        medicamento = medicamento_ctrl.readMedicamento(id)
-        if medicamento:
-            return jsonify(medicamento), 200
-        return jsonify({"message": "Medicamento não encontrado"}), 404
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+def get_medicamento(id):
+    return MedicamentoController().getMedicamento(id)
+
+
+@app.route('/api/medicamentos', methods=['GET'])
+def list_medicamentos():
+    return MedicamentoController().listMedicamentos()
+
 
 @app.route('/api/medicamentos/<int:id>', methods=['PUT'])
-def atualizar_medicamento(id):
+def update_medicamento(id):
     data = request.get_json()
-    try:
-        medicamento_ctrl.updateMedicamento(
-            idMedicamento=id,
-            novoNome=data.get('nome'),
-            novoIntervalo=data.get('intervalo'),
-            novaQuantidade=data.get('quantidade'),
-            novaData_inicio=data.get('data_inicio'),
-            novaData_fim=data.get('data_fim'),
-            novoPaciente=data.get('paciente'),
-            novoEspecialista=data.get('especialista')
-        )
-        return jsonify({"message": "Medicamento atualizado com sucesso!"}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
+    return MedicamentoController().updateMedicamento(
+        idMedicamento=id,
+        novoNome=data.get('nome'),
+        novoIntervalo=data.get('intervalo'),
+        novaQuantidade=data.get('quantidade'),
+        novaData_inicio=data.get('data_inicio'),
+        novaData_fim=data.get('data_fim'),
+        novoPaciente=data.get('paciente'),
+        novoEspecialista=data.get('especialista')
+    )
+
 
 @app.route('/api/medicamentos/<int:id>', methods=['DELETE'])
-def deletar_medicamento(id):
-    try:
-        medicamento_ctrl.deleteMedicamento(id)
-        return jsonify({"message": "Medicamento deletado com sucesso!"}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+def delete_medicamento(id):
+    return MedicamentoController().deleteMedicamento(id)
 
-@app.route('/api/lembretes', methods=['GET'])
-def get_lembretes():
-    try:
-        lembretes = lembrete_ctrl.listLembrete()
-        lembretes_dict = [{
-            'id': lem.id,
-            'data_hora': str(lem.data_hora),
-            'status': lem.status,
-            'medicamento': lem.medicamento.id,
-            'paciente': lem.paciente.id,
-            'medicamento_nome': lem.medicamento.nome,
-            'paciente_nome': lem.paciente.nome
-        } for lem in lembretes]
-        return jsonify(lembretes_dict), 200
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/lembretes/por-paciente/<int:paciente_id>', methods=['GET'])
-def get_lembretes_por_paciente(paciente_id):
-    try:
-        lembretes = lembrete_ctrl.listLembrete()
-        lembretes_paciente = [{
-            'id': lem.id,
-            'data_hora': str(lem.data_hora),
-            'status': lem.status,
-            'medicamento': lem.medicamento.id,
-            'paciente': lem.paciente.id,
-            'medicamento_nome': lem.medicamento.nome,
-            'paciente_nome': lem.paciente.nome
-        } for lem in lembretes if lem.paciente.id == paciente_id]
-        return jsonify(lembretes_paciente), 200
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/lembretes/<int:id>', methods=['GET'])
-def get_lembrete(id):
-    try:
-        lembrete = lembrete_ctrl.readLembrete(id)
-        if lembrete:
-            return jsonify({
-                'id': lembrete.id,
-                'data_hora': str(lembrete.data_hora),
-                'status': lembrete.status,
-                'medicamento': {
-                    'id': lembrete.medicamento.id,
-                    'nome': lembrete.medicamento.nome
-                },
-                'paciente': {
-                    'id': lembrete.paciente.id,
-                    'nome': lembrete.paciente.nome
-                },
-                'message': 'Lembrete encontrado'
-            }), 200
-        return jsonify({'error': 'Lembrete não encontrado'}), 404
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/lembretes', methods=['POST'])
 def create_lembrete():
+    data = request.get_json()
+    return LembreteController().createLembrete(
+        data['data_hora'],
+        data['status'],
+        data['medicamento'],
+        data['paciente']
+    )
+
+
+@app.route('/api/lembretes/<int:idLembrete>', methods=['GET'])
+def get_lembrete(idLembrete):
     try:
-        dados = request.get_json()
-        print("Dados recebidos:", dados)
-        
-        if not all(key in dados for key in ['data_hora', 'medicamento', 'paciente']):
-            return jsonify({'error': 'Dados incompletos'}), 400
-            
-        novo_lembrete = lembrete_ctrl.createLembrete(
-            data_hora=dados['data_hora'],
-            status=dados.get('status', False),
-            medicamento=dados['medicamento'],
-            paciente=dados['paciente']
-        )
-        
-        return jsonify({
-            'id': novo_lembrete.id,
-            'message': 'Lembrete criado com sucesso'
-        }), 201
-        
-    except Exception as e:
-        print("Erro na criação:", str(e))
-        return jsonify({'error': str(e)}), 500
+        result, status_code = LembreteController().getLembrete(idLembrete)
+        return jsonify(result), status_code
+    except ValueError:
+        result = LembreteController().getLembrete(idLembrete)
+        if isinstance(result, tuple) and len(result) == 2:
+            return jsonify(result[0]), result[1]
+        return jsonify(result), 200
 
-@app.route('/api/lembretes/<int:id>', methods=['PUT'])
-def update_lembrete(id):
+
+@app.route('/api/lembretes', methods=['GET'])
+def list_lembretes():
     try:
-        dados = request.get_json()
-
-        if not dados:
-            return jsonify({'error': 'Nenhum dado fornecido para atualização'}), 400
-
-        lembrete_atualizado = lembrete_ctrl.updateLembrete(
-            idLembrete=id,
-            novaData_hora=dados.get('data_hora'),
-            NovoStatus=dados.get('status'),
-            NovoMedicamento=dados.get('medicamento'),
-            NovoPaciente=dados.get('paciente')
-        )
-        
-        if not lembrete_atualizado:
-            return jsonify({'error': 'Lembrete não encontrado'}), 404
-            
-        return jsonify({
-            'id': lembrete_atualizado.id,
-            'data_hora': str(lembrete_atualizado.data_hora),
-            'status': lembrete_atualizado.status,
-            'medicamento': lembrete_atualizado.medicamento.id,
-            'paciente': lembrete_atualizado.paciente.id,
-            'message': 'Lembrete atualizado com sucesso'
-        }), 200
-        
+        result = LembreteController().listLembretes()
+        if isinstance(result, tuple):
+            return jsonify(result[0]), result[1]
+        return jsonify(result), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/lembretes/<int:id>', methods=['DELETE'])
-def delete_lembrete(id):
-    try:
-        deletado = lembrete_ctrl.deleteLembrete(id)
-        
-        if deletado:
-            return jsonify({'message': 'Lembrete deletado com sucesso'}), 200
-        else:
-            return jsonify({'error': 'Lembrete não encontrado'}), 404
-            
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
 
-@app.route('/api/lembretes/<int:id>/realizado', methods=['PATCH'])
-def marcar_lembrete_realizado(id):
-    try:
-        lembrete = lembrete_ctrl.readLembrete(id)
-        if not lembrete:
-            return jsonify({'error': 'Lembrete não encontrado'}), 404
-            
-        lembrete_atualizado = lembrete_ctrl.updateLembrete(
-            idLembrete=id,
-            novaData_hora=lembrete.data_hora,
-            NovoStatus=True,
-            NovoMedicamento=lembrete.medicamento.id,
-            NovoPaciente=lembrete.paciente.id
-        )
-        
-        return jsonify({
-            'id': lembrete_atualizado.id,
-            'message': 'Lembrete marcado como realizado'
-        }), 200
-        
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+@app.route('/api/lembretes/<int:idLembrete>', methods=['DELETE'])
+def delete_lembrete(idLembrete):
+    return LembreteController().deleteLembrete(idLembrete)
 
-if __name__ == '__main__':
-    app.run(debug=True)
 
 @app.route('/')
 def serve_index():
@@ -531,5 +261,4 @@ def page_not_found(e):
 if __name__ == '__main__':
     if not os.path.exists('View'):
         os.makedirs('View')
-
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, port=3000)
