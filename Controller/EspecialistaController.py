@@ -1,5 +1,6 @@
 from Model.Especialista import Especialista
 from Model.DataBase import ConnectDataBase
+from werkzeug.security import generate_password_hash
 from flask import jsonify
 
 class EspecialistaController(ConnectDataBase):
@@ -7,28 +8,37 @@ class EspecialistaController(ConnectDataBase):
         super().__init__()
 
     def createEspecialista(self, nome: str, crm: int, email: str, senha: str):
-        try:
-            if Especialista.select().where(Especialista.crm == crm).exists():
-                raise ValueError("CRM já cadastrado")
+            try:
+                if Especialista.select().where(Especialista.crm == crm).exists():
+                    raise ValueError("CRM já cadastrado")
 
-            if Especialista.select().where(Especialista.email == email).exists():
-                raise ValueError("Email já cadastrado")
+                if Especialista.select().where(Especialista.email == email).exists():
+                    raise ValueError("Email já cadastrado")
 
-            novo_especialista = Especialista.create(
-                nome=nome,
-                crm=crm,
-                email=email,
-                senha=senha
-            )
-            return novo_especialista
-        except Exception as e:
-            raise e
+                senhaHash = generate_password_hash(senha)
+
+                novoEspecialista = Especialista.create(
+                    nome=nome,
+                    crm=crm,
+                    email=email,
+                    senha=senhaHash
+                )
+                return novoEspecialista
+            except Exception as e:
+                raise e
 
     def getEspecialista(self, idEspecialista: int):
         try:
             return Especialista.get_by_id(idEspecialista)
         except Especialista.DoesNotExist:
             return None
+        except Exception as e:
+            raise e
+
+    def getEspecialistaByEmail(self, email: str):
+        try:
+            email = email.lower().strip()
+            return Especialista.get_or_none(Especialista.email == email)
         except Exception as e:
             raise e
 

@@ -37,6 +37,36 @@ def create_especialista():
         return jsonify({'error': str(e)}), 500
 
 
+@app.route('/api/especialista/login', methods=['POST'])
+def login_especialista():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'Dados de login não fornecidos'}), 400
+
+        email = data.get('email', '').lower().strip()
+        senha = data.get('senha', '')
+
+        if not email or not senha:
+            return jsonify({'error': 'Email e senha são obrigatórios'}), 400
+
+        especialista = EspecialistaController().getEspecialistaByEmail(email)
+
+        if not especialista or not check_password_hash(especialista.senha, senha):
+            return jsonify({'error': 'Credenciais inválidas'}), 401
+
+        return jsonify({
+            'id': especialista.id,
+            'nome': especialista.nome,
+            'crm': especialista.crm,
+            'email': especialista.email,
+            'message': 'Login realizado com sucesso'
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': f'Erro ao realizar login: {str(e)}'}), 500
+
+
 @app.route('/api/especialistas', methods=['GET'])
 def list_especialistas():
     try:
@@ -50,8 +80,6 @@ def list_especialistas():
         return jsonify(especialistas_dict)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
-from playhouse.shortcuts import model_to_dict
 
 
 @app.route('/api/especialistas/<int:id>', methods=['GET'])
